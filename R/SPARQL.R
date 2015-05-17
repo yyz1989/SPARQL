@@ -45,9 +45,8 @@ SPARQL <- function(url="http://localhost/", query="", update="",
       param <- "query"
     }
     if(format == 'xml') {
-      tf <- do.call(getURL,append(list(url = paste(url, '?', param, '=', gsub('\\+','%2B',URLencode(query,reserved=TRUE)), extrastr, sep=""),
-                                       httpheader = c(Accept="application/sparql-results+xml")),
-                                  curl_args))
+      httpheader <- list(Accept="application/sparql-results+xml")
+      tf <- queryByHttp(url, param, query, extrastr, append(list(httpheader = httpheader), curl_args))
       DOM <- do.call(xmlParse, append(list(tf), parser_args))
       if(length(getNodeSet(DOM, '//s:result[1]', namespaces=sparqlns)) == 0) {
         rm(DOM)
@@ -74,15 +73,15 @@ SPARQL <- function(url="http://localhost/", query="", update="",
         
       }
     } else if (format == 'csv') {
-      tf <- do.call(getURL,append(list(url=paste(url, '?', param, '=', gsub('\\+','%2B',URLencode(query,reserved=TRUE)), extrastr, sep="")),
+      tf <- queryByHttp(url, param, query, extrastr, curl_args)
+        do.call(getURL,append(list(url=paste(url, '?', param, '=', gsub('\\+','%2B',URLencode(query,reserved=TRUE)), extrastr, sep="")),
                                   curl_args))
       df <- do.call(readCSVstring,append(list(tf, blank.lines.skip=TRUE, strip.white=TRUE),
                                          parser_args))
       if (!is.null(ns)) 
         df <- dropNS(df,ns)
     } else if (format == 'tsv') {
-      tf <- do.call(getURL,append(list(url=paste(url, '?', param, '=', gsub('\\+','%2B',URLencode(query,reserved=TRUE)), extrastr, sep="")),
-                                  curl_args))
+      tf <- queryByHttp(url, param, query, extrastr, curl_args)
       df <- do.call(readTSVstring,append(list(tf, blank.lines.skip=TRUE, strip.white=TRUE),
                                          parser_args))
       if (!is.null(ns)) 
@@ -97,8 +96,23 @@ SPARQL <- function(url="http://localhost/", query="", update="",
       param <- "update"
     }
     extra[[param]] <- update
-    do.call(postForm,append(list(url, .params=extra),curl_args))
+    do.call(postForm,append(list(url, .params=extra), curl_args))
   }
+}
+
+queryByHttp <- function(url, param, query, extrastr, curl_args) {
+  if (("style" %in% names(curl_args)) && (tolower(curl_args[["style"]]) == "post")) {
+    curl_args <- curl_args[names(curl_args) != "style"]
+    queryForm <- list(query)
+    names(queryForm) <- list(param)
+    do.call(postForm, append(list(url,
+                                  style = "post", 
+                                  .opts = curl_args), 
+                             queryForm))
+  }
+  else
+    do.call(getURL,append(list(url = paste(url, '?', param, '=', gsub('\\+','%2B',URLencode(query,reserved=TRUE)), extrastr, sep="")),
+                          curl_args))
 }
 
 readTSVstring <- function(text, ...) {
