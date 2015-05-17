@@ -69,7 +69,7 @@ Examples of SPARQL end-points, \url{http://www.w3.org/wiki/SparqlEndpoints}.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Willem Robert van Hage and Tomi Kauppinen
+Willem Robert van Hage, Tomi Kauppinen and Yuanzhe Yang
 }
 %%\note{
 %%  ~~further notes~~
@@ -87,6 +87,18 @@ d <- SPARQL(url="http://services.data.gov.uk/reference/sparql",
             ns=c('time','<http://www.w3.org/2006/time#>'))
 
 is.data.frame(d$results)
+
+# query through HTTP POST request, used when size of query exceeds length of request (2 KB to 8 KB depending on server side) after URL encoding
+d <- SPARQL(url="http://services.data.gov.uk/reference/sparql",
+            query="SELECT * WHERE { ?s ?p ?o . } LIMIT 10",
+            ns=c('time','<http://www.w3.org/2006/time#>'), 
+            curl_args=list(style="post"))
+
+# query against endpoints requiring credentials
+d <- SPARQL(url="http://services.data.gov.uk/reference/sparql",
+            query="SELECT * WHERE { ?s ?p ?o . } LIMIT 10",
+            ns=c('time','<http://www.w3.org/2006/time#>'), 
+            curl_args=list(userpwd="user:password", httpauth=TRUE))
 
 # draw a pie chart from data from the Linked Open Piracy data set
 endpoint <- "http://semanticweb.cs.vu.nl/lop/sparql/"
