@@ -12,7 +12,7 @@ This package is not on CRAN yet. You can install it from Github:
 
 ```R
 if (!require('devtools')) install.packages('devtools')
-devtools::install_github('rstudio/leaflet')
+devtools::install_github('yyz1989/SPARQL')
 ```
 
 ## License
